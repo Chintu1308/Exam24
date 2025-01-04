@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Keystroke Recorder with Playback</title>
+  <title>Keystroke Recorder</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -19,16 +19,12 @@
       margin-bottom: 20px;
       font-size: 16px;
     }
-    .data-display, .playback-display {
+    .playback-display {
       padding: 10px;
       background: #f4f4f4;
       border: 1px solid #ddd;
       border-radius: 5px;
       margin-bottom: 20px;
-    }
-    .timestamp {
-      color: #888;
-      font-size: 14px;
     }
     button {
       padding: 10px 15px;
@@ -46,15 +42,10 @@
 </head>
 <body>
   <div class="container">
-    <h1>Keystroke Recorder with Playback</h1>
+    <h1>Keystroke Recorder</h1>
     <textarea id="textBox" placeholder="Type something..."></textarea>
-    <div id="dataDisplay" class="data-display">
-      <h3>Recorded Keystrokes</h3>
-      <ul id="dataList">
-        <li>No keystrokes recorded yet...</li>
-      </ul>
-    </div>
     <button id="playbackButton" disabled>Play Recorded Keystrokes</button>
+    <button id="downloadButton" disabled>Download JSON</button>
     <div id="playbackDisplay" class="playback-display">
       <h3>Playback</h3>
       <p id="playbackText">No playback yet...</p>
@@ -63,32 +54,22 @@
 
   <script>
     const textBox = document.getElementById('textBox');
-    const dataDisplay = document.getElementById('dataList');
     const playbackButton = document.getElementById('playbackButton');
+    const downloadButton = document.getElementById('downloadButton');
     const playbackText = document.getElementById('playbackText');
 
     let keystrokes = [];
 
     // Record each keystroke with a timestamp
-    textBox.addEventListener('input', (event) => {
+    textBox.addEventListener('input', () => {
       const currentText = textBox.value;
-      const timestamp = new Date().toLocaleTimeString();
+      const timestamp = new Date().toISOString();
       keystrokes.push({ text: currentText, timestamp });
-      updateDataDisplay();
       playbackButton.disabled = false;
+      downloadButton.disabled = false;
     });
 
-    // Update the recorded keystrokes display
-    function updateDataDisplay() {
-      dataDisplay.innerHTML = "";
-      keystrokes.forEach((item, index) => {
-        const listItem = document.createElement('li');
-        listItem.innerHTML = `<strong>${item.text}</strong> <span class="timestamp">(Recorded at: ${item.timestamp})</span>`;
-        dataDisplay.appendChild(listItem);
-      });
-    }
-
-    // Play back the recorded keystrokes with timestamps
+    // Play back the recorded keystrokes
     playbackButton.addEventListener('click', () => {
       playbackText.innerHTML = "Playing back recorded keystrokes...";
       let index = 0;
@@ -96,15 +77,29 @@
       function displayNext() {
         if (index < keystrokes.length) {
           const item = keystrokes[index];
-          playbackText.innerHTML = `<strong>${item.text}</strong> <span class="timestamp">(Recorded at: ${item.timestamp})</span>`;
+          playbackText.innerHTML = `<strong>${item.text}</strong>`;
           index++;
           setTimeout(displayNext, 500); // Play each keystroke every 500ms
         } else {
-          playbackText.innerHTML = "Playback completed!";
+          playbackText.innerHTML = `<strong>${keystrokes[keystrokes.length - 1].text}</strong>`;
         }
       }
 
       displayNext();
+    });
+
+    // Download the JSON file containing keystrokes
+    downloadButton.addEventListener('click', () => {
+      const jsonData = JSON.stringify(keystrokes, null, 2);
+      const blob = new Blob([jsonData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'keystrokes.json';
+      link.click();
+
+      URL.revokeObjectURL(url); // Clean up the URL
     });
   </script>
 </body>
